@@ -14,7 +14,7 @@ func main() {
 
 	fs := http.FileServer(http.Dir("template"))
 	http.Handle("/", fs)
-	http.Handle("/static/", http.FileServer(http.Dir("static")))
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	log.Printf("Server starting on http://localhost:%s", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))

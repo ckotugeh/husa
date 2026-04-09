@@ -8,20 +8,23 @@ body{
     margin-right: auto;
 
 }
-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 20px;
-    background-color: #fff;
-    border-bottom: 1px solid #ddd;
-}
+
 h1 {
-    color: #333;
+    color: black;
     margin: 0;
+    margin-left: 20%;
+    margin-right: auto;
 }
+h1:hover {
+     background-color: green;
+    color: white;
+   
+}   
 nav {
-    margin: 0;
+    margin: 50px 0;
+    color:  rgba(0,0,0,0.1);
+    float: center;
+    font-size: 2rem;
 }
 nav ul {
     list-style: none;
@@ -30,7 +33,7 @@ nav ul {
     display: flex;
     gap: 20px;
 }
-nav a {
+nav ul li a{
     text-decoration: none;
     color: #333;
     padding: 8px 15px;
@@ -52,10 +55,12 @@ nav a:hover {
 }   
 footer {
     text-align: center;
-    margin-top: 20px;
+    margin-top: 90%;
     padding: 20px;
-    color: #777;
+    color: #2c19fd;
     border-top: 1px solid #ddd;
+    font-weight: bold;
+    font-size: medium;
 }
 
 main {
