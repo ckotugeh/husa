@@ -5,28 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HUSA</title>
     <link rel="stylesheet" href="/static/style.css">
-    <h1>Healthcare Unified System Application</h1>
 </head>
 <body>
-    <nav>
-        <ul>
-            <li><a href="#">Home</a></li>
-            <li><a href="#">About</a></li>
-            <li><a href="#">Services</a></li>
-            <li><a href="#">Contact</a></li>
-        </ul>
-    </nav>
-    <section></section>
-    <section></section>
-    <section></section>
-    <p>This will be the body of the Application</p>
-    <section>
-        <footer>
-            <p>&copy; <span id="year"></span> Healthcare Unified System Application. All rights reserved.</p>
-            <script>
-                document.getElemementById('year').textContent =new Date().getFullYear();
-            </script>
-        </footer>
-    </section>
+    <header>
+        <h1>Healthcare Unified System Application</h1>
+        <nav>
+            <ul>
+                <li><a href="#">Home</a></li>
+                <li><a href="#">About</a></li>
+                <li><a href="#">Services</a></li>
+                <li><a href="#">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <section></section>
+        <section></section>
+        <section></section>
+        <p>This will be the body of the Application</p>
+    </main>
+    <footer>
+        <p>&copy; <span id="year"></span> Healthcare Unified System Application. All rights reserved.</p>
+    </footer>
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
 </body>
 </html>
