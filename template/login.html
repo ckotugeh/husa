@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LOGIN</title>
+  <h1>Login</h1>
+  <link rel="stylesheet" href="login.css">
+  
+</head>
+<body>
+  <form action="POST" GET="Home">Log in here<br/>
+    <input type="text" required value="User-name"><br />
+    <input type="password" password="password" required><br/>
+    <button class="button"><a rel="Home" href="index.html">LOGIN</a></a></button></br />
+    <section class="checkbox">
+      <input type="checkbox" >Remember me 
+    </section>
+    
+  </form>
+  <footer> 
+    <p> 
+      &copy; <span id="year"></span> Healthcare Unified System. All Rights Reserved
+    </p>
+      <script> 
+      document.getElementById('year').textContent = new Date().getFullYear();
+      </script>
+    
+   </footer>
+</body>
+</html>

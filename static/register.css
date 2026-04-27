@@ -1,0 +1,47 @@
+body{
+  
+  background-color: rgba(61, 233, 104, 0.774);
+  max-height: 80%;
+  max-width: 80%;
+  font-family: sans-serif, 'Times New Roman', Times, serif;
+}
+h1{
+  float: center;
+  color:rgba(22, 21, 21, 0.767);
+  flex: center;
+  margin-right: 15%;
+  margin-left: 40%;
+}
+form{
+  background-color: rgba(2, 1, 9, 0.25);
+  color: white;
+  border-radius: 1.5rem;
+  box-sizing: border-box;
+  border-width: 5in;
+  flex: auto;
+  margin: 5% 28% 40% 50%;
+  padding-left: 50% 50% 50% 50%;
+  text-align: center;
+  font-size: 1.25rem;
+  height: 300px;
+  width: 400px;
+}
+input{
+  margin-top: 7%;
+  width: 80%;
+}
+a{
+  text-decoration: 0;
+}
+ a:hover{
+  color: rgba(1, 2, 1, 0.764);
+   
+}
+footer{
+  margin-top: 80%;
+  padding: auto;
+  margin-bottom: 10%;
+  color: rgba(24, 23, 23, 0.877);
+  float: left;
+  margin-left: 40%;
+}
