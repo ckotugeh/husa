@@ -3,30 +3,35 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HUS</title>
-  <link rel="stylesheet" href="/static/register.css">
-  <h1>Healthcare Unified System</h1>
-  <link rel="#" href="login.html">
+  <title>Healthcare Unified System</title>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
-<div>
-  <label for="form"><form action="POST" >Register here</label><br/>
-  
-     <input type="text" value="Enter your name"><br /> 
-     <input type="charset" value="Email"><br/>
-     <input type="text" value="User-name"><br/>
-     <input type="password" value="pwd"><br/>
-     <button type="button" value="Submit"><a href="login.html">Register</a></button>
-   
-  </form>
-</div>
+<body>
+  <header>
+    <h1>Healthcare Unified System</h1>
+    <nav>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/login">Login</a></li>
+        <li><a href="/register">Register</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main>
+    <section class="hero">
+      <h2>Welcome to HUS</h2>
+      <p>Your trusted healthcare management platform</p>
+      <div class="cta-buttons">
+        <a href="/login" class="btn btn-primary">Login</a>
+        <a href="/register" class="btn btn-secondary">Register</a>
+      </div>
+    </section>
+  </main>
   <footer>
-    <p>
-      &copy; <span id="year"></span> Healthcare unified System. All Rights Reserved
-    </p>
+    <p>&copy; <span id="year"></span> Healthcare Unified System. All Rights Reserved.</p>
     <script>
-      document.getElementById('year').textContent= new Date().getFullYear();
+      document.getElementById('year').textContent = new Date().getFullYear();
     </script>
   </footer>
-
 </body>
 </html>

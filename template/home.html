@@ -1,34 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HUS</title>
-    <link rel="stylesheet" href="/static/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home - Healthcare Unified System</title>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <header>
-        <h1>Healthcare Unified System</h1>
-        <nav>
-            <ul>
-                <li><a href="#">Home</a></li>
-                <li><a href="#">About</a></li>
-                <li><a href="#">Services</a></li>
-                <li><a href="#">Contact</a></li>
-            </ul>
-        </nav>
-    </header>
-    <main>
-        <section>Patient records</section>
-        <section>common cases reported</section>
-        <section>chat with a Doctor</section>
-        <p>This will be the body of the Application</p>
-    </main>
-    <footer>
-        <p>&copy; <span id="year"></span> Healthcare Unified System. All Rights Reserved.</p>
-    </footer>
+  <header>
+    <h1>Healthcare Unified System</h1>
+    <nav>
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/login">Login</a></li>
+        <li><a href="/register">Register</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main>
+    <section class="content">
+      <h2>Patient Records</h2>
+      <p>Access and manage patient medical records securely and efficiently. Our system provides comprehensive record-keeping with advanced search and filtering capabilities.</p>
+    </section>
+    <section class="content">
+      <h2>Common Cases Reported</h2>
+      <p>Track and analyze common medical cases reported across the healthcare network. Gain insights into trends and improve patient care outcomes.</p>
+    </section>
+    <section class="content">
+      <h2>Chat with a Doctor</h2>
+      <p>Connect with healthcare professionals through our secure chat system. Get medical advice and consultations from licensed doctors anytime, anywhere.</p>
+    </section>
+    <section class="content">
+      <h2>System Overview</h2>
+      <p>This is the main portal for the Healthcare Unified System (HUS). Our platform brings together patient care, medical records, and professional collaboration in one unified interface designed to improve healthcare delivery and patient outcomes.</p>
+    </section>
+  </main>
+  <footer>
+    <p>&copy; <span id="year"></span> Healthcare Unified System. All Rights Reserved.</p>
     <script>
-        document.getElementById('year').textContent = new Date().getFullYear();
+      document.getElementById('year').textContent = new Date().getFullYear();
     </script>
+  </footer>
 </body>
 </html>

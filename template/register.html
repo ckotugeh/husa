@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register - Healthcare Unified System</title>
+  <link rel="stylesheet" href="/static/register.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Create Account</h1>
+    <form action="/register" method="POST">
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" name="name" placeholder="Enter your full name" required>
+      </div>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" placeholder="Enter your email" required>
+      </div>
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" placeholder="Choose a username" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="Create a password" required>
+      </div>
+      <div class="form-group">
+        <label for="confirm-password">Confirm Password</label>
+        <input type="password" id="confirm-password" name="confirm-password" placeholder="Confirm your password" required>
+      </div>
+      <div class="form-group checkbox-group">
+        <input type="checkbox" id="terms" name="terms" required>
+        <label for="terms">I agree to the Terms and Conditions</label>
+      </div>
+      <button type="submit" class="button">REGISTER</button>
+    </form>
+    <p class="login-link">
+      Already have an account? <a href="/login">Login here</a>
+    </p>
+  </div>
+  <footer>
+    <p>
+      &copy; <span id="year"></span> Healthcare Unified System. All Rights Reserved
+    </p>
+    <script>
+      document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+  </footer>
+</body>
+</html>
