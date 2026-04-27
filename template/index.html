@@ -1,34 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HUS</title>
-    <link rel="stylesheet" href="/static/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HUS</title>
+  <link rel="stylesheet" href="/static/register.css">
+  <h1>Healthcare Unified System</h1>
+  <link rel="#" href="login.html">
 </head>
-<body>
-    <header>
-        <h1>Healthcare Unified System</h1>
-        <nav>
-            <ul>
-                <li><a href="#">Home</a></li>
-                <li><a href="#">About</a></li>
-                <li><a href="#">Services</a></li>
-                <li><a href="#">Contact</a></li>
-            </ul>
-        </nav>
-    </header>
-    <main>
-        <section>Patient records</section>
-        <section>common cases reported</section>
-        <section>chat with a Doctor</section>
-        <p>This will be the body of the Application</p>
-    </main>
-    <footer>
-        <p>&copy; <span id="year"></span> Healthcare Unified System. All Rights Reserved.</p>
-    </footer>
+<div>
+  <label for="form"><form action="POST" >Register here</label><br/>
+  
+     <input type="text" value="Enter your name"><br /> 
+     <input type="charset" value="Email"><br/>
+     <input type="text" value="User-name"><br/>
+     <input type="password" value="pwd"><br/>
+     <button type="button" value="Submit"><a href="login.html">Register</a></button>
+   
+  </form>
+</div>
+  <footer>
+    <p>
+      &copy; <span id="year"></span> Healthcare unified System. All Rights Reserved
+    </p>
     <script>
-        document.getElementById('year').textContent = new Date().getFullYear();
+      document.getElementById('year').textContent= new Date().getFullYear();
     </script>
+  </footer>
+
 </body>
 </html>
