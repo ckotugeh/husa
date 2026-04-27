@@ -90,10 +90,27 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 
 		users[user.ID] = user
 
+		// Create session for the newly registered user
+		sessionID := generateID()
+		sessions[sessionID] = Session{
+			Username: username,
+			Expiry:   time.Now().Add(24 * time.Hour),
+		}
+
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session_id",
+			Value:    sessionID,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   false,
+			MaxAge:   86400,
+		})
+
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]string{
 			"message":  "Registration successful",
 			"username": user.Username,
+			"redirect": "/home.html",
 		})
 	} else {
 		http.Redirect(w, r, "/register.html", http.StatusSeeOther)

@@ -39,6 +39,7 @@
     <p class="login-link">
       Already have an account? <a href="/login">Login here</a>
     </p>
+    <div id="message" class="message"></div>
   </div>
   <footer>
     <p>
@@ -46,6 +47,39 @@
     </p>
     <script>
       document.getElementById('year').textContent = new Date().getFullYear();
+
+      // Handle registration form submission
+      document.querySelector('form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const form = e.target;
+        const formData = new FormData(form);
+        const messageDiv = document.getElementById('message');
+        
+        try {
+          const response = await fetch('/register', {
+            method: 'POST',
+            body: formData
+          });
+          
+          const data = await response.json();
+          
+          if (response.ok) {
+            messageDiv.style.color = 'green';
+            messageDiv.textContent = data.message;
+            // Redirect to home page after successful registration
+            setTimeout(() => {
+              window.location.href = data.redirect || '/home.html';
+            }, 500);
+          } else {
+            messageDiv.style.color = 'red';
+            messageDiv.textContent = data.error || 'Registration failed';
+          }
+        } catch (error) {
+          messageDiv.style.color = 'red';
+          messageDiv.textContent = 'Network error. Please try again.';
+        }
+      });
     </script>
   </footer>
 </body>
