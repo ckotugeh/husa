@@ -16,6 +16,8 @@ import (
 )
 
 func main() {
+	fs := http.FileServer(http.Dir("./frontend/static"))
+	http.Handle("/static/", http.StripPrefix("/frontend/static/", fs))
 	// Load configuration from environment / .env file.
 	cfg := config.Load()
 
