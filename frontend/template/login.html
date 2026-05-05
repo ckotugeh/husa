@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Healthcare Unified System</title>
+  <link rel="stylesheet" href="/static/login.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Login</h1>
+    <form action="/login" method="POST">
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" placeholder="Enter your username" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+      </div>
+      <div class="form-group checkbox-group">
+        <input type="checkbox" id="remember" name="remember">
+        <label for="remember">Remember me</label>
+      </div>
+      <button type="submit" class="button">LOGIN</button>
+    </form>
+    <p class="register-link">
+      Don't have an account? <a href="/register">Register here</a>
+    </p>
+    <div id="message" class="message"></div>
+  </div>
+  <footer>
+    <p>
+      &copy; <span id="year"></span> Healthcare Unified System. All Rights Reserved
+    </p>
+    <script>
+      document.getElementById('year').textContent = new Date().getFullYear();
+
+      // Handle login form submission
+      document.querySelector('form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const form = e.target;
+        const formData = new FormData(form);
+        const messageDiv = document.getElementById('message');
+        
+        try {
+          const response = await fetch('/login', {
+            method: 'POST',
+            body: formData
+          });
+          
+          const data = await response.json();
+          
+          if (response.ok) {
+            messageDiv.style.color = 'green';
+            messageDiv.textContent = data.message;
+            // Redirect to home page after successful login
+            setTimeout(() => {
+              window.location.href = data.redirect || '/home.html';
+            }, 500);
+          } else {
+            messageDiv.style.color = 'red';
+            messageDiv.textContent = data.error || 'Login failed';
+          }
+        } catch (error) {
+          messageDiv.style.color = 'red';
+          messageDiv.textContent = 'Network error. Please try again.';
+        }
+      });
+    </script>
+  </footer>
+</body>
+</html>
