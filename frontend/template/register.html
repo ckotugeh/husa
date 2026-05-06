@@ -9,26 +9,22 @@
 <body>
   <div class="container">
     <h1>Create Account</h1>
-    <form action="/register" method="POST">
+    <form id="registerForm">
       <div class="form-group">
-        <label for="name">Full Name</label>
-        <input type="text" id="name" name="name" placeholder="Enter your full name" required>
+        <label for="full_name">Full Name</label>
+        <input type="text" id="full_name" name="full_name" placeholder="Enter your full name" required>
       </div>
       <div class="form-group">
         <label for="email">Email</label>
         <input type="email" id="email" name="email" placeholder="Enter your email" required>
       </div>
       <div class="form-group">
-        <label for="username">Username</label>
-        <input type="text" id="username" name="username" placeholder="Choose a username" required>
-      </div>
-      <div class="form-group">
         <label for="password">Password</label>
         <input type="password" id="password" name="password" placeholder="Create a password" required>
       </div>
       <div class="form-group">
-        <label for="confirm-password">Confirm Password</label>
-        <input type="password" id="confirm-password" name="confirm-password" placeholder="Confirm your password" required>
+        <label for="country">Country</label>
+        <input type="text" id="country" name="country" placeholder="Enter your country" required>
       </div>
       <div class="form-group checkbox-group">
         <input type="checkbox" id="terms" name="terms" required>
@@ -37,7 +33,7 @@
       <button type="submit" class="button">REGISTER</button>
     </form>
     <p class="login-link">
-      Already have an account? <a href="/login">Login here</a>
+      Already have an account? <a href="/login.html">Login here</a>
     </p>
     <div id="message" class="message"></div>
   </div>
@@ -49,28 +45,40 @@
       document.getElementById('year').textContent = new Date().getFullYear();
 
       // Handle registration form submission
-      document.querySelector('form').addEventListener('submit', async function(e) {
+      document.getElementById('registerForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        const form = e.target;
-        const formData = new FormData(form);
+        const fullName = document.getElementById('full_name').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const country = document.getElementById('country').value;
+        const terms = document.getElementById('terms').checked;
         const messageDiv = document.getElementById('message');
         
+        if (!terms) {
+          messageDiv.style.color = 'red';
+          messageDiv.textContent = 'You must agree to the Terms and Conditions';
+          return;
+        }
+        
         try {
-          const response = await fetch('/register', {
+          const response = await fetch('/api/v1/auth/register', {
             method: 'POST',
-            body: formData
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ full_name: fullName, email, password, country })
           });
           
           const data = await response.json();
           
           if (response.ok) {
             messageDiv.style.color = 'green';
-            messageDiv.textContent = data.message;
-            // Redirect to home page after successful registration
+            messageDiv.textContent = 'Registration successful! Redirecting to login...';
+            // Redirect to login page after successful registration
             setTimeout(() => {
-              window.location.href = data.redirect || '/home.html';
-            }, 500);
+              window.location.href = '/login.html';
+            }, 1500);
           } else {
             messageDiv.style.color = 'red';
             messageDiv.textContent = data.error || 'Registration failed';

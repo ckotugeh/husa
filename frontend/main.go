@@ -7,185 +7,185 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"os"
+	"strings"
 	"time"
-
-	"golang.org/x/crypto/bcrypt"
 )
 
-type User struct {
-	ID       string    `json:"id"`
-	Name     string    `json:"name"`
-	Email    string    `json:"email"`
-	Username string    `json:"username"`
-	Password string    `json:"password"`
-	Created  time.Time `json:"created"`
-}
+// Backend API URL - can be configured via environment variable
+var backendURL *url.URL
 
+// Session stores user session data
 type Session struct {
-	Username string    `json:"username"`
-	Expiry   time.Time `json:"expiry"`
+	UserID       string    `json:"user_id"`
+	Email        string    `json:"email"`
+	FullName     string    `json:"full_name"`
+	Expiry       time.Time `json:"expiry"`
+	AccessToken  string    `json:"access_token"`
+	RefreshToken string    `json:"refresh_token"`
 }
 
-var (
-	users    = make(map[string]User)
-	sessions = make(map[string]Session)
-)
+var sessions = make(map[string]Session)
 
-func generateID() string {
+func getBackendURL() *url.URL {
+	backendURLStr := os.Getenv("BACKEND_URL")
+	if backendURLStr == "" {
+		backendURLStr = "http://localhost:8080"
+	}
+
+	u, err := url.Parse(backendURLStr)
+	if err != nil {
+		log.Fatalf("Invalid BACKEND_URL: %v", err)
+	}
+	return u
+}
+
+// proxyHandler creates a reverse proxy to the backend
+func proxyHandler(backend *url.URL) http.Handler {
+	proxy := httputil.NewSingleHostReverseProxy(backend)
+
+	// Use Director to modify the request
+	proxy.Director = func(req *http.Request) {
+		originalPath := req.URL.Path
+		originalRawQuery := req.URL.RawQuery
+		
+		req.URL.Scheme = backend.Scheme
+		req.URL.Host = backend.Host
+		req.URL.Path = singleJoiningSlash(backend.Path, originalPath)
+		req.URL.RawQuery = originalRawQuery
+		req.Host = backend.Host
+
+		// Forward cookies for session
+		cookie, err := req.Cookie("session_id")
+		if err == nil {
+			session, exists := sessions[cookie.Value]
+			if exists && time.Now().Before(session.Expiry) {
+				// Add Authorization header with access token
+				req.Header.Set("Authorization", "Bearer "+session.AccessToken)
+			}
+		}
+	}
+
+	// Modify the response to handle errors
+	proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
+		log.Printf("Proxy error: %v", err)
+		http.Error(w, "Backend service unavailable", http.StatusServiceUnavailable)
+	}
+
+	return proxy
+}
+
+func singleJoiningSlash(a, b string) string {
+	aslash := strings.HasSuffix(a, "/")
+	bslash := strings.HasPrefix(b, "/")
+	switch {
+	case aslash && bslash:
+		return a + b[1:]
+	case !aslash && !bslash:
+		return a + "/" + b
+	}
+	return a + b
+}
+
+// authProxyHandler handles auth endpoints with session management
+func authProxyHandler(backend *url.URL) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Create a proxy request
+		proxyReq, err := http.NewRequest(r.Method, backend.String()+r.URL.Path, r.Body)
+		if err != nil {
+			http.Error(w, "Failed to create request", http.StatusInternalServerError)
+			return
+		}
+
+		// Copy headers
+		for key, values := range r.Header {
+			for _, value := range values {
+				proxyReq.Header.Add(key, value)
+			}
+		}
+
+		// Set content type for form data
+		if strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/form-data") {
+			proxyReq.Header.Set("Content-Type", r.Header.Get("Content-Type"))
+		}
+
+		// Send request to backend
+		client := &http.Client{Timeout: 30 * time.Second}
+		resp, err := client.Do(proxyReq)
+		if err != nil {
+			log.Printf("Backend request error: %v", err)
+			http.Error(w, "Backend service unavailable", http.StatusServiceUnavailable)
+			return
+		}
+		defer resp.Body.Close()
+
+		// Copy response headers
+		for key, values := range resp.Header {
+			for _, value := range values {
+				w.Header().Add(key, value)
+			}
+		}
+
+		// Read response body
+		var respBody map[string]interface{}
+		if err := json.NewDecoder(resp.Body).Decode(&respBody); err == nil {
+			// Handle successful auth responses
+			if r.URL.Path == "/api/v1/auth/login" || r.URL.Path == "/api/v1/auth/register" {
+				if resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusCreated {
+					// Create session
+					sessionID := generateSessionID()
+
+					// Extract user and tokens from response
+					if user, ok := respBody["user"].(map[string]interface{}); ok {
+						if tokens, ok := respBody["tokens"].(map[string]interface{}); ok {
+							accessToken, _ := tokens["access_token"].(string)
+							refreshToken, _ := tokens["refresh_token"].(string)
+							userID, _ := user["id"].(string)
+							email, _ := user["email"].(string)
+							fullName, _ := user["full_name"].(string)
+
+							sessions[sessionID] = Session{
+								UserID:       userID,
+								Email:        email,
+								FullName:     fullName,
+								Expiry:       time.Now().Add(24 * time.Hour),
+								AccessToken:  accessToken,
+								RefreshToken: refreshToken,
+							}
+
+							// Set session cookie
+							http.SetCookie(w, &http.Cookie{
+								Name:     "session_id",
+								Value:    sessionID,
+								Path:     "/",
+								HttpOnly: true,
+								Secure:   false,
+								MaxAge:   86400,
+							})
+						}
+					}
+				}
+			}
+
+			// Return the response
+			w.WriteHeader(resp.StatusCode)
+			json.NewEncoder(w).Encode(respBody)
+		} else {
+			// For non-JSON responses, just copy the status
+			w.WriteHeader(resp.StatusCode)
+		}
+	}
+}
+
+func generateSessionID() string {
 	bytes := make([]byte, 16)
 	rand.Read(bytes)
 	return hex.EncodeToString(bytes)
 }
 
-func registerHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "POST" {
-		name := r.FormValue("name")
-		email := r.FormValue("email")
-		username := r.FormValue("username")
-		password := r.FormValue("password")
-		confirmPassword := r.FormValue("confirm-password")
-		terms := r.FormValue("terms")
-
-		if name == "" || email == "" || username == "" || password == "" || confirmPassword == "" {
-			http.Error(w, "All fields are required", http.StatusBadRequest)
-			return
-		}
-
-		if password != confirmPassword {
-			http.Error(w, "Passwords do not match", http.StatusBadRequest)
-			return
-		}
-
-		if terms != "on" && terms != "true" {
-			http.Error(w, "You must agree to the Terms and Conditions", http.StatusBadRequest)
-			return
-		}
-
-		for _, u := range users {
-			if u.Email == email {
-				http.Error(w, "Email already registered", http.StatusBadRequest)
-				return
-			}
-			if u.Username == username {
-				http.Error(w, "Username already taken", http.StatusBadRequest)
-				return
-			}
-		}
-
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-		if err != nil {
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
-			return
-		}
-
-		user := User{
-			ID:       generateID(),
-			Name:     name,
-			Email:    email,
-			Username: username,
-			Password: string(hashedPassword),
-			Created:  time.Now(),
-		}
-
-		users[user.ID] = user
-
-		// Create session for the newly registered user
-		sessionID := generateID()
-		sessions[sessionID] = Session{
-			Username: username,
-			Expiry:   time.Now().Add(24 * time.Hour),
-		}
-
-		http.SetCookie(w, &http.Cookie{
-			Name:     "session_id",
-			Value:    sessionID,
-			Path:     "/",
-			HttpOnly: true,
-			Secure:   false,
-			MaxAge:   86400,
-		})
-
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{
-			"message":  "Registration successful",
-			"username": user.Username,
-			"redirect": "/home.html",
-		})
-	} else {
-		http.Redirect(w, r, "/register.html", http.StatusSeeOther)
-	}
-}
-
-func loginHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "POST" {
-		username := r.FormValue("username")
-		password := r.FormValue("password")
-
-		if username == "" || password == "" {
-			http.Error(w, "Username and password are required", http.StatusBadRequest)
-			return
-		}
-
-		var foundUser User
-		for _, u := range users {
-			if u.Username == username {
-				foundUser = u
-				break
-			}
-		}
-
-		if foundUser.ID == "" {
-			http.Error(w, "Invalid username or password", http.StatusUnauthorized)
-			return
-		}
-
-		err := bcrypt.CompareHashAndPassword([]byte(foundUser.Password), []byte(password))
-		if err != nil {
-			http.Error(w, "Invalid username or password", http.StatusUnauthorized)
-			return
-		}
-
-		sessionID := generateID()
-		sessions[sessionID] = Session{
-			Username: username,
-			Expiry:   time.Now().Add(24 * time.Hour),
-		}
-
-		http.SetCookie(w, &http.Cookie{
-			Name:     "session_id",
-			Value:    sessionID,
-			Path:     "/",
-			HttpOnly: true,
-			Secure:   false,
-			MaxAge:   86400,
-		})
-
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]string{
-			"message":  "Login successful",
-			"redirect": "/home.html",
-		})
-	} else {
-		http.Redirect(w, r, "/login.html", http.StatusSeeOther)
-	}
-}
-
-func logoutHandler(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("session_id")
-	if err == nil {
-		delete(sessions, cookie.Value)
-	}
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_id",
-		Value:    "",
-		Path:     "/",
-		HttpOnly: true,
-		MaxAge:   -1,
-	})
-	http.Redirect(w, r, "/index.html", http.StatusSeeOther)
-}
-
+// homeHandler serves the home page with user info
 func homeHandler(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("session_id")
 	if err != nil {
@@ -198,14 +198,6 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		delete(sessions, cookie.Value)
 		http.Redirect(w, r, "/login.html", http.StatusSeeOther)
 		return
-	}
-
-	var user User
-	for _, u := range users {
-		if u.Username == session.Username {
-			user = u
-			break
-		}
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -235,7 +227,6 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
       <div class="user-info">
         <p><strong>Name:</strong> %s</p>
         <p><strong>Email:</strong> %s</p>
-        <p><strong>Username:</strong> %s</p>
       </div>
     </div>
   </div>
@@ -243,24 +234,52 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
     <p>&copy; %d Healthcare Unified System. All Rights Reserved</p>
   </footer>
 </body>
-</html>`, user.Username, user.Name, user.Email, user.Username, time.Now().Year())
+</html>`, session.FullName, session.FullName, session.Email, time.Now().Year())
+}
+
+// logoutHandler clears the session
+func logoutHandler(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("session_id")
+	if err == nil {
+		delete(sessions, cookie.Value)
+	}
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session_id",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		MaxAge:   -1,
+	})
+	http.Redirect(w, r, "/index.html", http.StatusSeeOther)
 }
 
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "3000"
 	}
 
-	http.HandleFunc("/register", registerHandler)
-	http.HandleFunc("/login", loginHandler)
-	http.HandleFunc("/logout", logoutHandler)
-	http.HandleFunc("/home.html", homeHandler)
+	backendURL = getBackendURL()
+	log.Printf("Connecting to backend at: %s", backendURL)
 
+	// API proxy - forwards all /api/* requests to backend
+	http.Handle("/api/", http.StripPrefix("/api", proxyHandler(backendURL)))
+
+	// Auth endpoints with session management
+	http.HandleFunc("/api/v1/auth/login", authProxyHandler(backendURL))
+	http.HandleFunc("/api/v1/auth/register", authProxyHandler(backendURL))
+	http.HandleFunc("/api/v1/auth/refresh", authProxyHandler(backendURL))
+	http.HandleFunc("/api/v1/auth/logout", authProxyHandler(backendURL))
+
+	// Page handlers
+	http.HandleFunc("/home.html", homeHandler)
+	http.HandleFunc("/logout", logoutHandler)
+
+	// Static files
 	fs := http.FileServer(http.Dir("template"))
 	http.Handle("/", fs)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
-	log.Printf("Server starting on http://localhost:%s", port)
+	log.Printf("Frontend server starting on http://localhost:%s", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
